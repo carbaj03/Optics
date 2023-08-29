@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
     id("com.google.devtools.ksp")
+    kotlin("plugin.serialization")
 }
 
 group = "com.example"
@@ -18,14 +19,33 @@ repositories {
 
 dependencies {
     val arrowVersion = "2.0.0-SNAPSHOT"
+    val kopyKatVersion = "1.0.4"
+    val xef = "0.0.3-alpha.40.2+DIRTY"
+
     implementation(compose.desktop.currentOs)
 
-    implementation("io.arrow-kt:arrow-fx-coroutines:$arrowVersion")
+    implementation("media.kamel:kamel-image:0.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("com.xebia:xef-kotlin:$xef")
+    implementation("com.xebia:xef-reasoning:$xef")
+    implementation("ch.qos.logback:logback-classic:1.4.8")
+    implementation ("com.aallam.openai:openai-client:3.3.2")
+    implementation ("io.ktor:ktor-client-android:2.2.4")
+
+//    implementation("io.arrow-kt:arrow-fx-coroutines:$arrowVersion")
     implementation("io.arrow-kt:arrow-optics:$arrowVersion")
     ksp("io.arrow-kt:arrow-optics-ksp-plugin:$arrowVersion")
+//    ksp("at.kopyk:kopykat-ksp:$kopyKatVersion")
+
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.2")
+    testImplementation("junit:junit:4.13.2")
 }
 
 kotlin {
+//    ksp {
+//        arg("generate", "packages:chat")
+//    }
+
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main")
     }

@@ -15,13 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import arrow.optics.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
-import optics.*
+import optc.*
 import kotlin.experimental.ExperimentalTypeInference
-import kotlin.reflect.KProperty
 
 context(MutableStateFlow<App>)
 @Composable
@@ -30,7 +26,7 @@ fun App() {
         val navigation by collectAsState()
 
         when (val s = navigation.screen) {
-            is Screen1 -> with(MutableStateFlow(Screen1(Toolbar(""), Button(""),  Button("")))) { s.render() }
+            is Screen1 -> with(MutableStateFlow(Screen1(Toolbar(title = optc.Text("")), Button(""),  Button("")))) { s.render() }
             is Screen2 -> {
 
             }
@@ -47,7 +43,7 @@ fun Screen1.render() {
     val screen: Screen1 by collectAsState()
 
     Column {
-        Text(screen.toolbar.title)
+        screen.toolbar.title.composable()
         Button(onClick = { screen.toolbar.Title = "33" }) {
             Text("Click me")
         }
@@ -240,95 +236,6 @@ fun DecoratedTextField(
         })
 }
 
-suspend fun main23(): Unit {
-    val appScope = CoroutineScope(SupervisorJob())
-    val app: MutableStateFlow<App> = MutableStateFlow(App(Splash))
-
-    appScope.launch {
-        app.collect {
-            when (app.value.screen) {
-                is Screen1 -> {
-                    val scope = CoroutineScope(SupervisorJob() + appScope.coroutineContext)
-                    val screen1 = MutableStateFlow(app.value.screen as Screen1)
-
-                    scope.launch {
-                        delay(100)
-                        app.value = app.value.copy(screen = Screen1(Toolbar("Hello, World!2"), Button("Hello, World!2"), Button("Hello, World!2")))
-                    }
-
-                    with(screen1) {
-                        screen1 {
-                            scope.launch {
-                                toolbar.Title = "Hello, Desktop!"
-                                println(value)
-                                makePrompt.Text = "Hello, Desktop!"
-                                println(value)
-
-                                delay(1000)
-                                app.value = app.value.copy(screen = Screen2(Toolbar("Hello, World!3"), text = Text(value = ""), button = Button(text = "Hello, World!3")))
-//                                scope.cancel()
-                                delay(1000)
-                                makePrompt.Text = "Hello, Desktop!"
-                                println(value)
-                            }
-                        }
-                    }
-                }
-
-                is Screen2 -> {
-                    val scope = CoroutineScope(SupervisorJob() + appScope.coroutineContext)
-                    val screen2 = MutableStateFlow(Screen2(Toolbar(title = "Hello, World!"), text = Text(value = ""), button = Button("Hello, World!")))
-                    with(screen2) {
-                        screen2 {
-                            toolbar.Title = "Hello, Desktop!"
-                            println(value)
-                            button.Text = "Hello, Desktop!"
-                            println(value)
-                            scope.launch {
-                                delay(1000)
-                                button.Text = "Hello, Desktop!"
-                                println(value)
-                            }
-                        }
-                    }
-                }
-
-                is Splash -> {
-                    val state = MutableStateFlow(Example(Example1(Example2(Example3(0), 0), 0), 0))
-                    with(state) {
-                        example {
-                            Counter++
-                            println(value)
-                            example1.Counter++
-                            println(value)
-                            example1.example2.Counter++
-                            println(value)
-                            Counter = 4
-                            println(value)
-                            example1.example2.example3.Counter++
-                            println(value)
-                            Example1 = Example1(Example2(Example3(0), 0), 0)
-                            println(value)
-                        }
-                    }
-                    delay(1000)
-                    app.value = app.value.copy(screen = Screen1(Toolbar("Hello, World!"), Button("Hello, World!"), Button("Hello, World!")))
-                }
-
-                null -> {}
-            }
-        }
-    }
-
-    delay(4000)
-    appScope.launch { println("safddfa") }
-    awaitCancellation()
-//    application {
-//        Window(onCloseRequest = ::exitApplication) {
-//            with(app) { App() }
-//        }
-//    }
-}
 
 
 
@@ -348,23 +255,23 @@ var Screen1.Toolbar: Toolbar
 
 context(MutableStateFlow<Screen1>)
 var Toolbar.Title: String
-    @JvmName("sadfdsa") get() = title
+    @JvmName("sadfdsa") get() = title.value
     @JvmName("sadfdsa2") set(new) {
-        value = value.copy(toolbar = copy(title = new))
+        value = value.copy(toolbar = copy(title = optc.Text(new)))
     }
 
 context(MutableStateFlow<Screen1>)
 var Screen1.Button: Button
-    get() = makePrompt
+    get() = login
     set(new) {
-        value = value.copy(makePrompt = new)
+        value = value.copy(login = new)
     }
 
 context(MutableStateFlow<Screen1>)
 var Button.Text: String
     @JvmName("sad2fdsa") get() = text
     @JvmName("sad3fdsa") set(new) {
-        value = value.copy(makePrompt = copy(text = new))
+        value = value.copy(login = copy(text = new))
     }
 
 context(MutableStateFlow<Screen2>)
@@ -383,9 +290,9 @@ var Screen2.Toolbar: Toolbar
 
 context(MutableStateFlow<Screen2>)
 var Toolbar.Title: String
-    get() = title
+    get() = title.value
     set(new) {
-        value = value.copy(toolbar = copy(title = new))
+        value = value.copy(toolbar = copy(title = optc.Text(new)))
     }
 
 context(MutableStateFlow<Screen2>)
