@@ -12,6 +12,7 @@ import com.aallam.openai.api.BetaOpenAI
 import com.xebia.functional.xef.conversation.llm.openai.OpenAiEvent
 import com.xebia.functional.xef.llm.models.chat.Role
 import com.xebia.functional.xef.tracing.Messages
+import com.xebia.functional.xef.tracing.Tokens
 import common.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
@@ -53,7 +54,12 @@ import kotlin.experimental.ExperimentalTypeInference
 
 interface Info {
 
-  @optics data class Conversation(val message: List<Message>) : Info {
+  @optics data class Conversation(
+    val context : List<Message>,
+    val history : List<Message>,
+    val message: List<Message>,
+    val totalTokens: Int
+  ) : Info {
 
     @optics sealed interface Message {
       val content: String
@@ -79,7 +85,6 @@ interface Info {
   @optics data class OpenAI(val event: OpenAiEvent) : Info {
     companion object
   }
-
 }
 
 inline operator fun <A : State> ChefApp.Companion.invoke(
@@ -118,7 +123,6 @@ val app = ChefApp(
     }
   }
 }
-
 
 context(Store<S>)
 inline fun <S : State, A : Screen> screen(f: context(CoroutineScope) () -> A): A {

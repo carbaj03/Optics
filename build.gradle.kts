@@ -20,7 +20,7 @@ repositories {
 dependencies {
     val arrowVersion = "2.0.0-SNAPSHOT"
     val kopyKatVersion = "1.0.4"
-    val xef = "0.0.3-alpha.40.2+DIRTY"
+    val xef = "0.0.3-alpha.43.1+DIRTY"
 
     implementation(compose.desktop.currentOs)
 

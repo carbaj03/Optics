@@ -21,10 +21,8 @@ import arrow.core.continuations.effect
 import arrow.core.continuations.fold
 import arrow.optics.optics
 import chef.invoke
-import common.Error
+import common.*
 import common.State
-import common.Store
-import common.StoreImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
@@ -160,6 +158,8 @@ operator fun Icon.invoke(modifier: Modifier = Modifier) = androidx.compose.mater
   data object Red : Color
   data object Green : Color
   data object Blue : Color
+  data object Pastel : Color
+  data object Teal : Color
 
   companion object
 }
@@ -170,6 +170,8 @@ operator fun Color.invoke(): androidx.compose.ui.graphics.Color = when (this) {
   Color.Green -> androidx.compose.ui.graphics.Color.Green
   Color.Red -> androidx.compose.ui.graphics.Color.Red
   Color.White -> androidx.compose.ui.graphics.Color.White
+  Color.Pastel -> Pastel
+  Color.Teal -> Teal
 }
 
 @optics data class Button(

@@ -10,6 +10,7 @@ import chef.LoggerImpl
 import com.aallam.openai.api.BetaOpenAI
 import com.xebia.functional.xef.conversation.llm.openai.OpenAI
 import com.xebia.functional.xef.conversation.llm.openai.OpenAiEvent
+import com.xebia.functional.xef.llm.models.chat.Message
 import com.xebia.functional.xef.llm.models.chat.Role
 import com.xebia.functional.xef.prompt.Prompt
 import com.xebia.functional.xef.prompt.templates.user
@@ -18,6 +19,7 @@ import com.xebia.functional.xef.reasoning.tools.LLMTool
 import com.xebia.functional.xef.reasoning.tools.ReActAgent
 import com.xebia.functional.xef.reasoning.tools.ReactAgentEvents
 import com.xebia.functional.xef.tracing.Messages
+import com.xebia.functional.xef.tracing.Tokens
 import com.xebia.functional.xef.tracing.Tracker
 import com.xebia.functional.xef.tracing.createDispatcher
 import common.Error
@@ -59,26 +61,20 @@ val app = ReActApp(
                 is ReactAgentEvents -> it + event.toInfo()
                 is Messages -> it + event.toInfo()
                 is OpenAiEvent -> it + event.toInfo()
+//                is Tokens -> it + event.toInfo()
                 else -> it
               }
             }
           }
         }
 
-        val msg = Tracker<Messages> {
-          screenContext.launch { logger.log(this@Tracker) }
-        }
-
-        val react = Tracker<ReactAgentEvents> {
-          screenContext.launch { logger.log(this@Tracker) }
-        }
-
-        val openAI = Tracker<OpenAiEvent> {
-          screenContext.launch { logger.log(this@Tracker) }
-        }
+        val msg = Tracker<Messages> { screenContext.launch { logger.log(this@Tracker) } }
+        val react = Tracker<ReactAgentEvents> { screenContext.launch { logger.log(this@Tracker) } }
+        val openAI = Tracker<OpenAiEvent> { screenContext.launch { logger.log(this@Tracker) } }
+        val tokens = Tracker<Tokens> { screenContext.launch { logger.log(this@Tracker) } }
 
         screenContext.launch {
-          OpenAI.conversation(dispatcher = createDispatcher(msg, react, openAI)) {
+          OpenAI.conversation(dispatcher = createDispatcher(msg, react, openAI, tokens)) {
             val model = OpenAI().DEFAULT_CHAT
             val serialization = OpenAI().DEFAULT_SERIALIZATION
             val math = LLMTool.create(
@@ -111,14 +107,17 @@ val app = ReActApp(
   )
 }
 
+//fun Tokens.toInfo() = Info.Tokens(this)
+
 @OptIn(BetaOpenAI::class)
-fun OpenAiEvent.toInfo(): Info.OpenAI = when (this) {
-  is OpenAiEvent.Chat.Chunk -> TODO()
-  is OpenAiEvent.Chat.Request -> TODO()
-  is OpenAiEvent.Chat.Response -> TODO()
-  is OpenAiEvent.Chat.WithFunctionRequest -> {
-    val response = response
-    Info.OpenAI(this)
+fun OpenAiEvent.toInfo(): Info.OpenAI =
+  when (this) {
+    is OpenAiEvent.Chat.Chunk -> TODO()
+    is OpenAiEvent.Chat.Request -> TODO()
+    is OpenAiEvent.Chat.Response -> TODO()
+    is OpenAiEvent.Chat.WithFunctionRequest -> {
+      val response = response
+      Info.OpenAI(this)
 //              it + Info.OpenAI(mapOf("function" to response.functions.toString()))
 //                """
 //                function : ${response.functions}
@@ -133,27 +132,33 @@ fun OpenAiEvent.toInfo(): Info.OpenAI = when (this) {
 //                presencePenalty : ${response.presencePenalty}
 //                frequencyPenalty : ${response.frequencyPenalty}
 //                """.trimIndent()
-  }
-  is OpenAiEvent.Chat.WithFunctionResponse -> {
-    Info.OpenAI(this)
+    }
+    is OpenAiEvent.Chat.WithFunctionResponse -> {
+      Info.OpenAI(this)
 //              it + Info.OpenAI(mapOf( "WithFunctionResponse" to event.response.toString()))
+    }
+    is OpenAiEvent.Completion.Request -> TODO()
+    is OpenAiEvent.Completion.Response -> TODO()
+    is OpenAiEvent.Image.Request -> TODO()
+    is OpenAiEvent.Image.Response -> TODO()
+    is OpenAiEvent.Embedding.Request -> TODO()
+    is OpenAiEvent.Embedding.Response -> TODO()
   }
-  is OpenAiEvent.Completion.Request -> TODO()
-  is OpenAiEvent.Completion.Response -> TODO()
-  is OpenAiEvent.Image.Request -> TODO()
-  is OpenAiEvent.Image.Response -> TODO()
-}
 
 fun Messages.toInfo(): Info.Conversation =
   Info.Conversation(
-    name.map {
-      when (it.role) {
-        Role.SYSTEM -> Info.Conversation.Message.System(it.content)
-        Role.USER -> Info.Conversation.Message.User(it.content)
-        Role.ASSISTANT -> Info.Conversation.Message.Assistant(it.content)
-      }
-    }
+    message = prompt.map { toInfo(it) },
+    context = contextAllowed.map { toInfo(it) },
+    history = historyAllowed.map { toInfo(it) },
+    totalTokens = countTokens,
   )
+
+private fun toInfo(it: Message): Info.Conversation.Message =
+  when (it.role) {
+    Role.SYSTEM -> Info.Conversation.Message.System(it.content)
+    Role.USER -> Info.Conversation.Message.User(it.content)
+    Role.ASSISTANT -> Info.Conversation.Message.Assistant(it.content)
+  }
 
 fun ReactAgentEvents.toInfo(): ReactInfo =
   when (this) {
