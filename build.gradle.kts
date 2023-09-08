@@ -19,8 +19,7 @@ repositories {
 
 dependencies {
     val arrowVersion = "2.0.0-SNAPSHOT"
-    val kopyKatVersion = "1.0.4"
-    val xef = "0.0.3-alpha.43.1+DIRTY"
+    val xef = "0.0.4-alpha.11.1+368b069"
 
     implementation(compose.desktop.currentOs)
 
@@ -32,20 +31,14 @@ dependencies {
     implementation ("com.aallam.openai:openai-client:3.3.2")
     implementation ("io.ktor:ktor-client-android:2.2.4")
 
-//    implementation("io.arrow-kt:arrow-fx-coroutines:$arrowVersion")
     implementation("io.arrow-kt:arrow-optics:$arrowVersion")
     ksp("io.arrow-kt:arrow-optics-ksp-plugin:$arrowVersion")
-//    ksp("at.kopyk:kopykat-ksp:$kopyKatVersion")
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.2")
     testImplementation("junit:junit:4.13.2")
 }
 
 kotlin {
-//    ksp {
-//        arg("generate", "packages:chat")
-//    }
-
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main")
     }
